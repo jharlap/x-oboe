@@ -1,0 +1,7 @@
+{
+  "name": "x-oboe#gh-pages",
+  "private": true,
+  "dependencies": {
+    "x-oboe": "jharlap/x-oboe#master"
+  }
+}

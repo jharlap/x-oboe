@@ -1,0 +1,158 @@
+<link rel="import" href="../polymer/polymer.html">
+<script src="../oboe/dist/oboe-browser.min.js"></script>
+
+<!--
+Element using Oboe.js as a replacement for core-ajax to get data that is served as JSON. If you set a node filter, then an event is fired for each matching node.
+
+##### Example
+
+    <x-oboe url="/data/foods.json" nodeFilter="foods.*" node="{{nodeObject}}" done="{{resultObject}}" error="{{errorObject}}" dropMatches auto></x-oboe>
+
+@element x-oboe
+@blurb Serves as a special purpose replacement for core-ajax, using Oboe.js to handle getting streaming JSON and processing it as it downloads. Exposes oboe itself to the handler functions, so keep the Oboe.js docs handy if you want the extra power!
+@status alpha
+@homepage http://jharlap.github.io/x-oboe
+-->
+<polymer-element name="x-oboe" hidden attributes="url nodeFilter auto dropMatches node done error">
+  <template>
+    <style>
+      :host {
+        display: none;
+      }
+    </style>
+  </template>
+  <script>
+    Polymer({
+      /**
+       * The URL target of the request.
+       *
+       * @attribute url
+       * @type string
+       * @default ''
+       */
+      url: '',
+
+      /**
+       * The node filter.
+       *
+       * @attribute nodeFilter
+       * @type string
+       * @default null
+       */
+      nodeFilter: null,
+
+      /**
+       * If true, automatically starts the download when url changes.
+       *
+       * @attribute auto
+       * @type bool
+       * @default false
+       */
+      auto: false,
+
+      /**
+       * If true, automatically drops nodes that match the node filter.
+       *
+       * @attribute dropMatches
+       * @type bool
+       * @default false
+       */
+      dropMatches: false,
+
+      /**
+       * The node content, published when the node filter matches a node.
+       *
+       * @attribute node
+       * @type string
+       * @default null
+       */
+      node: null,
+
+      /**
+       * The final content, published when oboe-done fires.
+       *
+       * @attribute done
+       * @type string
+       * @default null
+       */
+      done: null,
+
+      /**
+       * The last error, if one occurred.
+       *
+       * @attribute error
+       * @type object
+       * @default null
+       */
+      error: null,
+
+      urlChanged: function() {
+        if (this.auto) {
+          this.go();
+        }
+      },
+
+      /**
+       * Fired when a node is found.
+       *
+       * @event oboe-node
+       * @param {Object} detail
+       *   @param {Object} detail.node The found node
+       *   @param {Object} detail.oboe The Oboe.js context
+       */
+
+      /**
+       * Fired when the download is complete.
+       *
+       * @event oboe-done
+       * @param {Object} detail
+       *   @param {Object} detail.obj The object remaining after all other processing is done.
+       *   @param {Object} detail.oboe The Oboe.js context
+       */
+
+      /**
+       * Fired when an error is received.
+       *
+       * @event oboe-error
+       * @param {Object} detail
+       *   @param {Object} detail.err The error object
+       *     @param {string} detail.err.thrown The error, if one was thrown.
+       *     @param {string} detail.err.statusCode The status code, if available.
+       *     @param {string} detail.err.body The response body, if available.
+       *     @param {string} detail.err.jsonBody If the response body was JSON, the parsed body.
+       *   @param {Object} detail.oboe The Oboe.js context
+       */
+
+      /**
+       * The `go` method will start the download.
+       *
+       * @method go
+       */
+      go: function () {
+        if (!this.url || this.url == '') {
+          throw new Error("Must set a URL before calling go!");
+        }
+
+        var req = oboe(this.url);
+        var el = this;
+        if (this.nodeFilter) {
+          req.node(this.nodeFilter, function(nodeObject) {
+            el.node = nodeObject;
+            el.fire('oboe-node', {node: nodeObject, oboe: this});
+            if (el.dropMatches) {
+              return oboe.drop;
+            }
+          });
+        }
+        req.done(function(obj) {
+          el.done = obj;
+          el.fire('oboe-done', {obj: obj, oboe: this});
+        })
+        req.fail(function(err) {
+          el.error = err;
+          el.fire('oboe-error', {err: err, oboe: this});
+        })
+      }
+    });
+  </script>
+</polymer-element>

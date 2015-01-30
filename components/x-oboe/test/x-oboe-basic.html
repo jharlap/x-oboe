@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>x-oboe</title>
+
+  <script src="../../webcomponentsjs/webcomponents.js"></script>
+  <script src="../../web-component-tester/browser.js"></script>
+
+  <link rel="import" href="../x-oboe.html">
+
+</head>
+<body>
+
+  <x-oboe id="fixture"></x-oboe>
+
+  <script>
+    var myEl = document.getElementById('fixture');
+
+    suite('<x-oboe>', function() {
+
+      test('defines the "url" property', function() {
+        assert.strictEqual(myEl.url, '');
+      });
+
+      test('defines the "auto" property', function() {
+        assert.isFalse(myEl.auto);
+      });
+
+      test('defines the "dropMatches" property', function() {
+        assert.isFalse(myEl.dropMatches);
+      });
+
+      test('throws an error when go() is run with no url set', function() {
+        myEl.url = '';
+        assert.throws(myEl.go, Error, /set a URL/);
+      });
+
+      // Note that this depends on http://ip.jsontest.com/ being online and accessible!
+      test('fires oboe-done after a successful download', function(done) {
+        myEl.url = 'http://ip.jsontest.com/';
+        var doneListener = function(ev) {
+          assert.property(ev.detail.obj, 'ip');
+          myEl.removeEventListener('oboe-done', doneListener);
+          done();
+        };
+        myEl.addEventListener('oboe-done', doneListener);
+        myEl.go();
+      });
+
+      // Note that this depends on http://ip.jsontest.com/ being online and accessible!
+      test('does not fire oboe-node if no nodeFilter is set', function(done) {
+        myEl.url = 'http://ip.jsontest.com/';
+        myEl.nodeFilter = null;
+        var nodeListener = function(ev) {
+          assert.fail("Fired oboe-node when it should not have");
+        };
+        var doneListener = function(ev) {
+          ev.detail.oboe.forget();
+          myEl.removeEventListener('oboe-node', nodeListener);
+          myEl.removeEventListener('oboe-done', doneListener);
+          done();
+        };
+        myEl.addEventListener('oboe-node', nodeListener);
+        myEl.addEventListener('oboe-done', doneListener);
+        myEl.go();
+      });
+
+      // Note that this depends on http://ip.jsontest.com/ being online and accessible!
+      test('fires oboe-node when a nodeFilter matches', function(done) {
+        myEl.url = 'http://ip.jsontest.com/';
+        myEl.nodeFilter = '{ip}';
+        var nodeFired = false;
+        var nodeListener = function(ev) {
+          assert.property(ev.detail.node, 'ip');
+          nodeFired = true;
+        };
+        var doneListener = function(ev) {
+          assert.isTrue(nodeFired);
+          myEl.removeEventListener('oboe-node', nodeListener);
+          myEl.removeEventListener('oboe-done', doneListener);
+          done();
+        };
+        myEl.addEventListener('oboe-node', nodeListener);
+        myEl.addEventListener('oboe-done', doneListener);
+        myEl.go();
+      });
+
+      // Note that this depends on http://ip.jsontest.com/ being online and accessible!
+      test('updates the node attribute when a nodeFilter matches', function(done) {
+        myEl.url = 'http://ip.jsontest.com/';
+        myEl.nodeFilter = '{ip}';
+
+        var doneListener = function(ev) {
+          assert.property(myEl, 'node');
+          assert.operator(myEl.node.ip.length, '>', 0, 'node has an "ip" property with non-zero length');
+          myEl.removeEventListener('oboe-done', doneListener);
+          done();
+        };
+        myEl.addEventListener('oboe-done', doneListener);
+        myEl.go();
+      });
+
+      // Note that this depends on http://ip.jsontest.com/ being online and accessible!
+      test('updates the done attribute when done', function(done) {
+        myEl.url = 'http://ip.jsontest.com/';
+        myEl.nodeFilter = null;
+
+        var doneListener = function(ev) {
+          assert.property(myEl, 'done');
+          assert.operator(myEl.done.ip.length, '>', 0, 'done content is populated');
+          myEl.removeEventListener('oboe-done', doneListener);
+          done();
+        };
+        myEl.addEventListener('oboe-done', doneListener);
+        myEl.go();
+      });
+
+    });
+  </script>
+
+</body>
+</html>
