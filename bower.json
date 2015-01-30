@@ -1,6 +1,13 @@
 {
   "name": "x-oboe",
-  "version": "0.0.1",
+  "description":"x-oboe is a web component wrapping oboe.js so that JSON payloads can be fetched from a server and processed as they stream down the wire.",
+  "homepage":"http://jharlap.github.io/x-oboe/",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jharlap/x-oboe.git"
+  },
+  "license":"MIT",
+  "version": "0.0.2",
   "keywords": [
     "oboe",
     "ajax",

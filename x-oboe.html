@@ -6,14 +6,14 @@ Element using Oboe.js as a replacement for core-ajax to get data that is served 
 
 ##### Example
 
-    <x-oboe url="/data/foods.json" node="foods.*" on-oboe-node="{{handleNode}}" on-oboe-done="{{handleDone}}"></x-oboe>
+    <x-oboe url="/data/foods.json" nodeFilter="foods.*" node="{{nodeObject}}" done="{{resultObject}}" error="{{errorObject}}" dropMatches auto></x-oboe>
 
 @element x-oboe
 @blurb Serves as a special purpose replacement for core-ajax, using Oboe.js to handle getting streaming JSON and processing it as it downloads. Exposes oboe itself to the handler functions, so keep the Oboe.js docs handy if you want the extra power!
 @status alpha
 @homepage http://jharlap.github.io/x-oboe
 -->
-<polymer-element name="x-oboe" hidden attributes="url nodeFilter auto dropMatches">
+<polymer-element name="x-oboe" hidden attributes="url nodeFilter auto dropMatches node done error">
   <template>
     <style>
       :host {
@@ -59,13 +59,32 @@ Element using Oboe.js as a replacement for core-ajax to get data that is served 
        */
       dropMatches: false,
 
+      /**
+       * The node content, published when the node filter matches a node.
+       *
+       * @attribute node
+       * @type string
+       * @default null
+       */
+      node: null,
 
+      /**
+       * The final content, published when oboe-done fires.
+       *
+       * @attribute done
+       * @type string
+       * @default null
+       */
+      done: null,
 
-      ready: function () {
-        // Ready is a lifecycle callback.
-        // You can do setup work in here.
-        // More info: http://www.polymer-project.org/docs/polymer/polymer.html#lifecyclemethods
-      },
+      /**
+       * The last error, if one occurred.
+       *
+       * @attribute error
+       * @type object
+       * @default null
+       */
+      error: null,
 
       urlChanged: function() {
         if (this.auto) {
@@ -118,7 +137,7 @@ Element using Oboe.js as a replacement for core-ajax to get data that is served 
         var el = this;
         if (this.nodeFilter) {
           req.node(this.nodeFilter, function(nodeObject) {
-            console.log("firing oboe-node");
+            el.node = nodeObject;
             el.fire('oboe-node', {node: nodeObject, oboe: this});
             if (el.dropMatches) {
               return oboe.drop;
@@ -126,11 +145,11 @@ Element using Oboe.js as a replacement for core-ajax to get data that is served 
           });
         }
         req.done(function(obj) {
-          console.log("firing oboe-done");
+          el.done = obj;
           el.fire('oboe-done', {obj: obj, oboe: this});
         })
         req.fail(function(err) {
-          console.log("firing oboe-error");
+          el.error = err;
           el.fire('oboe-error', {err: err, oboe: this});
         })
       }

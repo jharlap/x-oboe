@@ -10,21 +10,39 @@
   </head>
   <body unresolved>
     <h1>x-oboe demo</h1>
-    <p>An `x-oboe` is invisible. However, here is an example of using one to read a JSON file, filtering for a node. In this case, we're going to make a list of the titles of open issues on Oboe.js:</p>
+    <div>An `x-oboe` is invisible. However, here is an example of using one to read a JSON file, filtering for a node. In this case, we're going to make a list of the titles of open issues on Oboe.js.</div>
 
     <x-oboe-demo></x-oboe-demo>
 
     <polymer-element name="x-oboe-demo" layout vertical>
       <template>
-        <h2>Issues</h2>
+        <div hidden?={{!issue.user.login}}>Using data binding, the last issue in the list (because of the node filter overwriting the property for each matched node) was created by github user: {{issue.user.login}}</div>
+
+        <div style="color: red" hidden?={{!error}}>
+          <h2>An error occurred!</h2>
+          <ul>
+            <li>Thrown: {{error.thrown}}</li>
+            <li>Status Code: {{error.statusCode}}</li>
+            <li>Body: {{error.body}}</li>
+          </ul>
+        </div>
+
+        <h2>Issues (populated with data binding)</h2>
+        <ul>
+          <template repeat="{{item in finalData}}">
+            <li>{{item.title}}</li>
+          </template>
+        </ul>
+
+        <h2>Issues (populated with event handlers)</h2>
         <ul>
           <template id="titleCollection" repeat="{{item in items}}">
             <li>{{item}}</li>
           </template>
         </ul>
 
-        <!-- The json returned from github is an array of objects, and we filter on objects with a 'title' property. -->
-        <x-oboe url="https://api.github.com/repos/jimhigson/oboe.js/issues" nodeFilter="{title}" on-oboe-node="{{handleNode}}" on-oboe-done="{{handleDone}}" on-oboe-error="{{handleFail}}" dropMatches auto></x-oboe>
+        <!-- The json returned from github is an array of objects, and we filter on objects with both 'title' and 'user' properties. -->
+        <x-oboe url="https://api.github.com/repos/jimhigson/oboe.js/issues" nodeFilter="{title user}" node="{{issue}}" done="{{finalData}}" error="{{error}}" on-oboe-node="{{handleNode}}" on-oboe-done="{{handleDone}}" on-oboe-error="{{handleFail}}" auto></x-oboe>
 
       </template>
       <script>
@@ -39,11 +57,9 @@
           },
           handleDone: function(ev) {
             console.log("handleDone says: ", ev);
-            this.items.push("All done! Result (should be all nulls because of dropMatches): " + JSON.stringify(ev.detail.obj));
           },
           handleFail: function(ev) {
             console.log("handleFail says: ", ev);
-            this.items.push("Error: " + ev.detail);
           }
         });
       </script>
