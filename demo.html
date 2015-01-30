@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>x-oboe Demo</title>
+    <script src="../webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="../polymer/polymer.html">
+    <link rel="import" href="x-oboe.html">
+  </head>
+  <body unresolved>
+    <h1>x-oboe demo</h1>
+    <p>An `x-oboe` is invisible. However, here is an example of using one to read a JSON file, filtering for a node. In this case, we're going to make a list of the titles of open issues on Oboe.js:</p>
+
+    <x-oboe-demo></x-oboe-demo>
+
+    <polymer-element name="x-oboe-demo" layout vertical>
+      <template>
+        <h2>Issues</h2>
+        <ul>
+          <template id="titleCollection" repeat="{{item in items}}">
+            <li>{{item}}</li>
+          </template>
+        </ul>
+
+        <!-- The json returned from github is an array of objects, and we filter on objects with a 'title' property. -->
+        <x-oboe url="https://api.github.com/repos/jimhigson/oboe.js/issues" nodeFilter="{title}" on-oboe-node="{{handleNode}}" on-oboe-done="{{handleDone}}" on-oboe-error="{{handleFail}}" dropMatches auto></x-oboe>
+
+      </template>
+      <script>
+        Polymer('x-oboe-demo', {
+          items: null,
+          ready: function() {
+            this.items = [];
+          },
+          handleNode: function(ev) {
+            console.log("handleNode says: ", ev);
+            this.items.push(ev.detail.node.title);
+          },
+          handleDone: function(ev) {
+            console.log("handleDone says: ", ev);
+            this.items.push("All done! Result (should be all nulls because of dropMatches): " + JSON.stringify(ev.detail.obj));
+          },
+          handleFail: function(ev) {
+            console.log("handleFail says: ", ev);
+            this.items.push("Error: " + ev.detail);
+          }
+        });
+      </script>
+    </template>
+  </body>
+</html>
